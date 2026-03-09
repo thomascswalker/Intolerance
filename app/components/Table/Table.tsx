@@ -1,11 +1,12 @@
+import vars from "@/app/vars";
 import { ReactNode } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 const styles = StyleSheet.create({
   table: {
     margin: 10,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: vars.colors.border.primary,
     width: "100%",
     borderRadius: 12,
     overflow: "hidden",
@@ -14,13 +15,13 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    borderBottomColor: vars.colors.border.primary,
   },
   cell: {
     flex: 1, // Distributes space evenly
     padding: 10,
     textAlign: "center",
-    borderColor: "#ccc",
+    borderColor: vars.colors.border.primary,
     borderRadius: 12,
   },
   header: {
@@ -28,7 +29,8 @@ const styles = StyleSheet.create({
     padding: 10,
     textAlign: "center",
     fontWeight: "bold",
-    backgroundColor: "#acacac",
+    backgroundColor: vars.colors.surface.secondary,
+    color: vars.colors.text.secondary,
   },
 });
 
@@ -49,7 +51,7 @@ const Row = ({ children }: RowProps) => {
 };
 
 const Header = ({ children }: RowProps) => {
-  return <View style={styles.header}>{children}</View>;
+  return <Text style={styles.header}>{children}</Text>;
 };
 
 const Head = ({ children }: RowProps) => {

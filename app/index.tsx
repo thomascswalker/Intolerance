@@ -3,6 +3,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { useFonts } from "expo-font";
 import { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import Table from "./components/Table/Table";
@@ -41,9 +42,9 @@ const columns = [
             )
             .sort((n1, n2) => n1.name.localeCompare(n2.name))
             .map((nutrient, index) => (
-              <View key={index}>
+              <Text key={index}>
                 {nutrient.name}: {nutrient.amount} {nutrient.unitName}
-              </View>
+              </Text>
             ))}
         </View>
       );
@@ -52,6 +53,9 @@ const columns = [
 ];
 
 export default function Index() {
+  const [loaded, error] = useFonts({
+    "SF-Pro": require("../assets/fonts/SF-Pro-Display-Regular.otf"),
+  });
   const [data, setData] = useState<Food[]>([]);
   const table = useReactTable({
     data,
