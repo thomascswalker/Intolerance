@@ -1,3 +1,8 @@
+// https://fdc.nal.usda.gov/data-documentation
+// https://app.swaggerhub.com/apis/fdcnal/food-data_central_api/1.0.1
+
+export type DataType = "Branded" | "Foundation" | "Survey (FNDDS)" | "SR Legacy";
+
 export type Unit = "G" | "MG" | "UG" | "KCAL" | "IU";
 
 export interface Nutrient {
@@ -8,7 +13,7 @@ export interface Nutrient {
 }
 
 export interface Food {
-    dataType: string;
+    dataType: DataType;
     description: string;
     fdcId: number;
     foodNutrients: Nutrient[];

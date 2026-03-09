@@ -4,7 +4,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import Table from "./components/Table/Table";
 import { Food, Nutrient } from "./data/usda/types";
 import { fetchUsdaData } from "./data/usda/usda";
@@ -15,10 +15,16 @@ const columns = [
   {
     accessorKey: "fdcId",
     header: "ID",
+    cell: ({ getValue }: { getValue: () => number }) => {
+      return <Text>{getValue()}</Text>;
+    },
   },
   {
     accessorKey: "description",
     header: "Description",
+    cell: ({ getValue }: { getValue: () => string }) => {
+      return <Text>{getValue()}</Text>;
+    },
   },
   {
     accessorKey: "foodNutrients",
@@ -55,7 +61,7 @@ export default function Index() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const result = await fetchUsdaData(20, 1);
+      const result = await fetchUsdaData("Foundation", 200, 1);
       setData(result);
     };
     fetchData();
@@ -67,24 +73,25 @@ export default function Index() {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
+        padding: 20,
       }}
     >
-      <ScrollView>
-        <Table>
-          <Table.Head>
-            {table.getHeaderGroups().map((hg) => (
-              <Table.Row key={hg.id}>
-                {hg.headers.map((header) => (
-                  <Table.Header key={header.id}>
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
-                    )}
-                  </Table.Header>
-                ))}
-              </Table.Row>
-            ))}
-          </Table.Head>
+      <Table>
+        <Table.Head>
+          {table.getHeaderGroups().map((hg) => (
+            <Table.Row key={hg.id}>
+              {hg.headers.map((header) => (
+                <Table.Header key={header.id}>
+                  {flexRender(
+                    header.column.columnDef.header,
+                    header.getContext(),
+                  )}
+                </Table.Header>
+              ))}
+            </Table.Row>
+          ))}
+        </Table.Head>
+        <ScrollView>
           <Table.Body>
             {table.getRowModel().rows.map((row) => (
               <Table.Row key={row.id}>
@@ -96,8 +103,8 @@ export default function Index() {
               </Table.Row>
             ))}
           </Table.Body>
-        </Table>
-      </ScrollView>
+        </ScrollView>
+      </Table>
     </View>
   );
 }

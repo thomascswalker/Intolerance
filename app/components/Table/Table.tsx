@@ -1,11 +1,43 @@
 import { ReactNode } from "react";
+import { StyleSheet, View } from "react-native";
+
+const styles = StyleSheet.create({
+  table: {
+    margin: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    width: "100%",
+    borderRadius: 12,
+    overflow: "hidden",
+    height: "100%",
+  },
+  row: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+  },
+  cell: {
+    flex: 1, // Distributes space evenly
+    padding: 10,
+    textAlign: "center",
+    borderColor: "#ccc",
+    borderRadius: 12,
+  },
+  header: {
+    flex: 1, // Distributes space evenly
+    padding: 10,
+    textAlign: "center",
+    fontWeight: "bold",
+    backgroundColor: "#acacac",
+  },
+});
 
 interface CellProps {
   children: ReactNode;
 }
 
 const Cell = ({ children }: CellProps) => {
-  return <td>{children}</td>;
+  return <View style={styles.cell}>{children}</View>;
 };
 
 interface RowProps {
@@ -13,19 +45,19 @@ interface RowProps {
 }
 
 const Row = ({ children }: RowProps) => {
-  return <tr>{children}</tr>;
+  return <View style={styles.row}>{children}</View>;
 };
 
 const Header = ({ children }: RowProps) => {
-  return <th>{children}</th>;
+  return <View style={styles.header}>{children}</View>;
 };
 
 const Head = ({ children }: RowProps) => {
-  return <thead>{children}</thead>;
+  return <View>{children}</View>;
 };
 
 const Body = ({ children }: RowProps) => {
-  return <tbody>{children}</tbody>;
+  return <View>{children}</View>;
 };
 
 interface TableProps {
@@ -33,7 +65,7 @@ interface TableProps {
 }
 
 const Table = ({ children }: TableProps) => {
-  return <table>{children}</table>;
+  return <View style={styles.table}>{children}</View>;
 };
 
 const _Table = Object.assign(Table, {
