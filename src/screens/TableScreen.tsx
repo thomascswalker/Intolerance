@@ -1,6 +1,3 @@
-import Table from "@/app/components/Table/Table";
-import { Food, Nutrient } from "@/app/data/usda/types";
-import { fetchUsdaData } from "@/app/data/usda/usda";
 import {
   flexRender,
   getCoreRowModel,
@@ -8,6 +5,9 @@ import {
 } from "@tanstack/react-table";
 import React, { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
+import Table from "../components/Table/Table";
+import { Food, Nutrient } from "../services/usda/types";
+import { fetchUsdaData } from "../services/usda/usda";
 
 const VISIBLE_NUTRIENTS = ["Energy", "Sucrose", "Fructose", "Lactose"];
 
@@ -51,7 +51,7 @@ const columns = [
   },
 ];
 
-function TablePage() {
+export default function TableScreen() {
   const [data, setData] = useState<Food[]>([]);
   const table = useReactTable({
     data,
@@ -64,6 +64,7 @@ function TablePage() {
       const result = await fetchUsdaData("Foundation", 200, 1);
       setData(result);
     };
+
     fetchData();
   }, []);
 
@@ -108,5 +109,3 @@ function TablePage() {
     </View>
   );
 }
-
-export default TablePage;

@@ -1,6 +1,6 @@
-import vars from "@/app/vars";
 import { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import vars from "../../theme/vars";
 
 const styles = StyleSheet.create({
   table: {
@@ -18,14 +18,14 @@ const styles = StyleSheet.create({
     borderBottomColor: vars.colors.border.primary,
   },
   cell: {
-    flex: 1, // Distributes space evenly
+    flex: 1,
     padding: 10,
     textAlign: "center",
     borderColor: vars.colors.border.primary,
     borderRadius: 12,
   },
   header: {
-    flex: 1, // Distributes space evenly
+    flex: 1,
     padding: 10,
     textAlign: "center",
     fontWeight: "bold",
