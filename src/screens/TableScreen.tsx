@@ -1,3 +1,5 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   ColumnDef,
   ExpandedState,
@@ -6,8 +8,26 @@ import {
   getExpandedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  LayoutAnimation,
+  Modal,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  UIManager,
+  View,
+} from "react-native";
+import Reanimated, {
+  FadeInDown,
+  FadeOutUp,
+  LinearTransition,
+} from "react-native-reanimated";
 import Chip from "../components/Chip";
 import Table from "../components/Table";
 import { Food, Nutrient } from "../services/usda/types";
@@ -15,6 +35,8 @@ import { fetchUsdaData } from "../services/usda/usda";
 import vars from "../theme/vars";
 
 const DEFAULT_VISIBLE_NUTRIENTS = ["Energy", "Sucrose", "Fructose", "Lactose"];
+const PAGE_SIZE = 200;
+const EXPANDER_COLUMN_WIDTH = 44;
 const NUTRIENT_COLOR_MAP: Record<string, string> = {
   Energy: vars.colors.base.red,
   Sucrose: vars.colors.base.orange,
@@ -42,6 +64,53 @@ interface DescriptionNode {
   children: DescriptionNode[];
   foods: Food[];
 }
+
+interface ExpandChevronProps {
+  canExpand: boolean;
+  isExpanded: boolean;
+  onPress: () => void;
+}
+
+const ExpandChevron = ({
+  canExpand,
+  isExpanded,
+  onPress,
+}: ExpandChevronProps) => {
+  const rotation = React.useRef(new Animated.Value(isExpanded ? 1 : 0)).current;
+
+  React.useEffect(() => {
+    Animated.timing(rotation, {
+      toValue: isExpanded ? 1 : 0,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [isExpanded, rotation]);
+
+  const rotate = rotation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "90deg"],
+  });
+
+  if (!canExpand) {
+    return <View style={{ minWidth: 24 }} />;
+  }
+
+  return (
+    <Pressable
+      onPressIn={onPress}
+      unstable_pressDelay={0}
+      style={{ minWidth: 24, alignItems: "center" }}
+    >
+      <Animated.View style={{ transform: [{ rotate }] }}>
+        <Ionicons
+          name="chevron-forward"
+          size={16}
+          color={vars.colors.surface.secondary}
+        />
+      </Animated.View>
+    </Pressable>
+  );
+};
 
 const normalizeLabel = (label: string) => label.trim().toLowerCase();
 
@@ -201,14 +270,60 @@ const hasVisibleNutrient = (food: Food, selectedNutrients: string[]) =>
   );
 
 export default function TableScreen() {
-  const [data, setData] = useState<Food[]>([]);
   const [expandedRows, setExpandedRows] = useState<ExpandedState>({});
   const [selectedNutrients, setSelectedNutrients] = useState<string[]>(
     DEFAULT_VISIBLE_NUTRIENTS,
   );
   const [isNutrientFilterOpen, setIsNutrientFilterOpen] = useState(false);
 
+  React.useEffect(() => {
+    if (
+      Platform.OS === "android" &&
+      UIManager.setLayoutAnimationEnabledExperimental
+    ) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+  }, []);
+
+  const {
+    data: queryData,
+    isPending,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    error,
+  } = useInfiniteQuery({
+    queryKey: ["usda-foods", "Foundation"],
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) =>
+      fetchUsdaData("Foundation", PAGE_SIZE, pageParam),
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.length < PAGE_SIZE) {
+        return undefined;
+      }
+      return allPages.length + 1;
+    },
+    staleTime: 1000 * 60,
+  });
+
+  const data = useMemo(() => {
+    const allFoods = queryData?.pages.flatMap((page) => page) ?? [];
+    const deduped = new Map<number, Food>();
+
+    allFoods.forEach((food) => {
+      if (!deduped.has(food.fdcId)) {
+        deduped.set(food.fdcId, food);
+      }
+    });
+
+    return Array.from(deduped.values());
+  }, [queryData]);
+
   const toggleExpandedRow = useCallback((rowId: string) => {
+    if (Platform.OS !== "web") {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    }
+
     setExpandedRows((current) => {
       if (current === true) {
         return {};
@@ -243,6 +358,22 @@ export default function TableScreen() {
     [data, selectedNutrients],
   );
 
+  const handleTableScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { contentOffset, contentSize, layoutMeasurement } =
+        event.nativeEvent;
+      const threshold = 200;
+      const isNearBottom =
+        contentOffset.y + layoutMeasurement.height >=
+        contentSize.height - threshold;
+
+      if (isNearBottom && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage],
+  );
+
   const toggleNutrientSelection = useCallback((nutrientName: string) => {
     setSelectedNutrients((current) => {
       if (current.includes(nutrientName)) {
@@ -259,6 +390,24 @@ export default function TableScreen() {
 
   const columns = useMemo<ColumnDef<DescriptionNode>[]>(
     () => [
+      {
+        id: "expander",
+        header: "",
+        cell: ({ row }) => {
+          const canExpand = row.getCanExpand();
+          const isExpanded = row.getIsExpanded();
+
+          return (
+            <View style={{ alignItems: "center", justifyContent: "center" }}>
+              <ExpandChevron
+                canExpand={canExpand}
+                isExpanded={isExpanded}
+                onPress={() => toggleExpandedRow(row.id)}
+              />
+            </View>
+          );
+        },
+      },
       // {
       //   id: "fdcId",
       //   header: "ID",
@@ -276,32 +425,15 @@ export default function TableScreen() {
         header: "Description",
         cell: ({ row }) => {
           const canExpand = row.getCanExpand();
-          const isExpanded = row.getIsExpanded();
           const entryCount = row.original.foods.length;
           const label = canExpand
             ? `${row.original.label} (${entryCount})`
             : row.original.label;
 
           return (
-            <Pressable
-              disabled={!canExpand}
-              onPress={() => canExpand && toggleExpandedRow(row.id)}
-              style={{
-                flexDirection: "row",
-                alignItems: "flex-start",
-                gap: 8,
-              }}
-            >
-              <Text
-                style={{
-                  width: 16,
-                  color: vars.colors.surface.secondary,
-                }}
-              >
-                {canExpand ? (isExpanded ? "-" : "+") : ""}
-              </Text>
+            <View>
               <Chip color={DESCRIPTION_CHIP_COLOR}>{label}</Chip>
-            </Pressable>
+            </View>
           );
         },
       },
@@ -363,15 +495,6 @@ export default function TableScreen() {
     getExpandedRowModel: getExpandedRowModel(),
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const result = await fetchUsdaData("Foundation", 200, 1);
-      setData(result);
-    };
-
-    fetchData();
-  }, []);
-
   return (
     <View
       style={{
@@ -386,7 +509,17 @@ export default function TableScreen() {
           {table.getHeaderGroups().map((headerGroup) => (
             <Table.Row key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <Table.Header key={header.id}>
+                <Table.Header
+                  key={header.id}
+                  style={
+                    header.column.id === "expander"
+                      ? {
+                          flex: 0,
+                          width: EXPANDER_COLUMN_WIDTH,
+                        }
+                      : undefined
+                  }
+                >
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext(),
@@ -396,23 +529,71 @@ export default function TableScreen() {
             </Table.Row>
           ))}
         </Table.Head>
-        <ScrollView>
+        <ScrollView scrollEventThrottle={100} onScroll={handleTableScroll}>
           <Table.Body>
             {table.getRowModel().rows.map((row) => (
-              <Table.Row
+              <Reanimated.View
                 key={row.id}
-                style={{
-                  backgroundColor: getDepthRowColor(row.depth),
-                }}
+                entering={FadeInDown.duration(180)}
+                exiting={FadeOutUp.duration(140)}
+                layout={LinearTransition.duration(180)}
               >
-                {row.getVisibleCells().map((cell) => (
-                  <Table.Cell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </Table.Cell>
-                ))}
-              </Table.Row>
+                <Table.Row
+                  style={{
+                    backgroundColor: getDepthRowColor(row.depth),
+                  }}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <Table.Cell
+                      key={cell.id}
+                      style={
+                        cell.column.id === "expander"
+                          ? {
+                              flex: 0,
+                              width: EXPANDER_COLUMN_WIDTH,
+                            }
+                          : undefined
+                      }
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </Table.Cell>
+                  ))}
+                </Table.Row>
+              </Reanimated.View>
             ))}
           </Table.Body>
+          <View style={{ paddingVertical: 16, alignItems: "center", gap: 8 }}>
+            {isPending ? (
+              <>
+                <ActivityIndicator color={vars.colors.surface.secondary} />
+                <Text style={{ color: vars.colors.surface.secondary }}>
+                  Loading foods...
+                </Text>
+              </>
+            ) : null}
+
+            {!isPending && isFetchingNextPage ? (
+              <>
+                <ActivityIndicator color={vars.colors.surface.secondary} />
+                <Text style={{ color: vars.colors.surface.secondary }}>
+                  Loading more...
+                </Text>
+              </>
+            ) : null}
+
+            {!isPending && !isFetchingNextPage && !hasNextPage ? (
+              <Text style={{ color: vars.colors.base.gray }}>End of list</Text>
+            ) : null}
+
+            {error ? (
+              <Text style={{ color: vars.colors.base.red }}>
+                Failed to load foods. Please try again.
+              </Text>
+            ) : null}
+          </View>
         </ScrollView>
       </Table>
 

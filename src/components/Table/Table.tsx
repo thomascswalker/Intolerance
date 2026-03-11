@@ -22,21 +22,24 @@ const styles = StyleSheet.create({
   header: {
     flex: 1,
     padding: 10,
+    borderTopWidth: 1,
+    borderTopColor: vars.colors.border.primary,
+  },
+  headerText: {
     textAlign: "center",
     textTransform: "lowercase",
     fontWeight: "bold",
     color: vars.colors.surface.secondary,
-    borderTopWidth: 1,
-    borderTopColor: vars.colors.border.primary,
   },
 });
 
 interface CellProps {
   children: ReactNode;
+  style?: StyleProp<ViewStyle>;
 }
 
-const Cell = ({ children }: CellProps) => {
-  return <View style={styles.cell}>{children}</View>;
+const Cell = ({ children, style }: CellProps) => {
+  return <View style={[styles.cell, style]}>{children}</View>;
 };
 
 interface RowProps {
@@ -48,8 +51,12 @@ const Row = ({ children, style }: RowProps) => {
   return <View style={[styles.row, style]}>{children}</View>;
 };
 
-const Header = ({ children }: RowProps) => {
-  return <Text style={styles.header}>{children}</Text>;
+const Header = ({ children, style }: RowProps) => {
+  return (
+    <View style={[styles.header, style]}>
+      <Text style={styles.headerText}>{children}</Text>
+    </View>
+  );
 };
 
 const Head = ({ children }: RowProps) => {
