@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 import vars from "../../theme/vars";
 
 const styles = StyleSheet.create({
@@ -41,10 +41,11 @@ const Cell = ({ children }: CellProps) => {
 
 interface RowProps {
   children: ReactNode;
+  style?: StyleProp<ViewStyle>;
 }
 
-const Row = ({ children }: RowProps) => {
-  return <View style={styles.row}>{children}</View>;
+const Row = ({ children, style }: RowProps) => {
+  return <View style={[styles.row, style]}>{children}</View>;
 };
 
 const Header = ({ children }: RowProps) => {
