@@ -1,10 +1,11 @@
+import { createDrawerNavigator } from "@react-navigation/drawer";
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 import { useFonts } from "expo-font";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import Table from "./components/Table/Table";
 import { Food, Nutrient } from "./data/usda/types";
@@ -52,7 +53,9 @@ const columns = [
   },
 ];
 
-export default function Index() {
+const Drawer = createDrawerNavigator();
+
+function TablePage() {
   const [loaded, error] = useFonts({
     "SF-Pro": require("../assets/fonts/SF-Pro-Display-Regular.otf"),
   });
@@ -110,5 +113,13 @@ export default function Index() {
         </ScrollView>
       </Table>
     </View>
+  );
+}
+
+export default function App() {
+  return (
+    <Drawer.Navigator initialRouteName="Home">
+      <Drawer.Screen name="Home" component={TablePage} />
+    </Drawer.Navigator>
   );
 }
