@@ -5,12 +5,9 @@ import vars from "../../theme/vars";
 const styles = StyleSheet.create({
   table: {
     margin: 10,
-    borderWidth: 1,
-    borderColor: vars.colors.border.primary,
     width: "100%",
-    borderRadius: 12,
-    overflow: "hidden",
     height: "100%",
+    overflow: "hidden",
   },
   row: {
     flexDirection: "row",
@@ -21,16 +18,16 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     textAlign: "center",
-    borderColor: vars.colors.border.primary,
-    borderRadius: 12,
   },
   header: {
     flex: 1,
     padding: 10,
     textAlign: "center",
+    textTransform: "lowercase",
     fontWeight: "bold",
-    backgroundColor: vars.colors.surface.secondary,
-    color: vars.colors.text.secondary,
+    color: vars.colors.surface.secondary,
+    borderTopWidth: 1,
+    borderTopColor: vars.colors.border.primary,
   },
 });
 
