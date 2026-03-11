@@ -1,16 +1,13 @@
 import { ReactNode } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 import vars from "../../theme/vars";
 
 const styles = StyleSheet.create({
   table: {
     margin: 10,
-    borderWidth: 1,
-    borderColor: vars.colors.border.primary,
     width: "100%",
-    borderRadius: 12,
-    overflow: "hidden",
     height: "100%",
+    overflow: "hidden",
   },
   row: {
     flexDirection: "row",
@@ -21,37 +18,45 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     textAlign: "center",
-    borderColor: vars.colors.border.primary,
-    borderRadius: 12,
   },
   header: {
     flex: 1,
     padding: 10,
+    borderTopWidth: 1,
+    borderTopColor: vars.colors.border.primary,
+  },
+  headerText: {
     textAlign: "center",
+    textTransform: "lowercase",
     fontWeight: "bold",
-    backgroundColor: vars.colors.surface.secondary,
-    color: vars.colors.text.secondary,
+    color: vars.colors.surface.secondary,
   },
 });
 
 interface CellProps {
   children: ReactNode;
+  style?: StyleProp<ViewStyle>;
 }
 
-const Cell = ({ children }: CellProps) => {
-  return <View style={styles.cell}>{children}</View>;
+const Cell = ({ children, style }: CellProps) => {
+  return <View style={[styles.cell, style]}>{children}</View>;
 };
 
 interface RowProps {
   children: ReactNode;
+  style?: StyleProp<ViewStyle>;
 }
 
-const Row = ({ children }: RowProps) => {
-  return <View style={styles.row}>{children}</View>;
+const Row = ({ children, style }: RowProps) => {
+  return <View style={[styles.row, style]}>{children}</View>;
 };
 
-const Header = ({ children }: RowProps) => {
-  return <Text style={styles.header}>{children}</Text>;
+const Header = ({ children, style }: RowProps) => {
+  return (
+    <View style={[styles.header, style]}>
+      <Text style={styles.headerText}>{children}</Text>
+    </View>
+  );
 };
 
 const Head = ({ children }: RowProps) => {
