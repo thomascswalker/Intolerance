@@ -11,7 +11,6 @@ import {
 import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   LayoutAnimation,
   Modal,
   NativeScrollEvent,
@@ -29,32 +28,19 @@ import Reanimated, {
   LinearTransition,
 } from "react-native-reanimated";
 import Chip from "../components/Chip";
+import ExpandChevron from "../components/ExpandChevron";
 import Table from "../components/Table";
-import { Food, Nutrient } from "../services/usda/types";
+import { Food } from "../services/usda/types";
 import { fetchUsdaData } from "../services/usda/usda";
+import { hasVisibleNutrient, visibleNutrients } from "../services/usda/utils";
 import vars from "../theme/vars";
-
-const DEFAULT_VISIBLE_NUTRIENTS = ["Energy", "Sucrose", "Fructose", "Lactose"];
-const PAGE_SIZE = 200;
-const EXPANDER_COLUMN_WIDTH = 44;
-const NUTRIENT_COLOR_MAP: Record<string, string> = {
-  Energy: vars.colors.base.red,
-  Sucrose: vars.colors.base.orange,
-  Fructose: vars.colors.base.blue,
-  Lactose: vars.colors.base.green,
-};
-
-const DESCRIPTION_CHIP_COLOR = vars.colors.base.gray;
-
-const toHexChannel = (value: number) =>
-  Math.max(0, Math.min(255, value)).toString(16).padStart(2, "0");
-
-const getDepthRowColor = (depth: number) => {
-  const brightnessFactor = Math.max(0, 1 - depth * 0.1);
-  const channelValue = Math.round(255 * brightnessFactor);
-  const channel = toHexChannel(channelValue);
-  return `#${channel}${channel}${channel}`;
-};
+import { getDepthRowColor } from "../utils/color";
+import {
+  DEFAULT_VISIBLE_NUTRIENTS,
+  EXPANDER_COLUMN_WIDTH,
+  NUTRIENT_COLOR_MAP,
+  PAGE_SIZE,
+} from "./constants";
 
 interface DescriptionNode {
   id: string;
@@ -64,53 +50,6 @@ interface DescriptionNode {
   children: DescriptionNode[];
   foods: Food[];
 }
-
-interface ExpandChevronProps {
-  canExpand: boolean;
-  isExpanded: boolean;
-  onPress: () => void;
-}
-
-const ExpandChevron = ({
-  canExpand,
-  isExpanded,
-  onPress,
-}: ExpandChevronProps) => {
-  const rotation = React.useRef(new Animated.Value(isExpanded ? 1 : 0)).current;
-
-  React.useEffect(() => {
-    Animated.timing(rotation, {
-      toValue: isExpanded ? 1 : 0,
-      duration: 180,
-      useNativeDriver: true,
-    }).start();
-  }, [isExpanded, rotation]);
-
-  const rotate = rotation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "90deg"],
-  });
-
-  if (!canExpand) {
-    return <View style={{ minWidth: 24 }} />;
-  }
-
-  return (
-    <Pressable
-      onPressIn={onPress}
-      unstable_pressDelay={0}
-      style={{ minWidth: 24, alignItems: "center" }}
-    >
-      <Animated.View style={{ transform: [{ rotate }] }}>
-        <Ionicons
-          name="chevron-forward"
-          size={16}
-          color={vars.colors.surface.secondary}
-        />
-      </Animated.View>
-    </Pressable>
-  );
-};
 
 const normalizeLabel = (label: string) => label.trim().toLowerCase();
 
@@ -255,20 +194,6 @@ const sortTreeNodes = (nodes: DescriptionNode[]) => {
   return nodes;
 };
 
-const visibleNutrients = (nutrients: Nutrient[], selectedNutrients: string[]) =>
-  nutrients
-    .filter(
-      (nutrient) =>
-        selectedNutrients.includes(nutrient.name) && nutrient.amount > 0,
-    )
-    .sort((n1, n2) => n1.name.localeCompare(n2.name));
-
-const hasVisibleNutrient = (food: Food, selectedNutrients: string[]) =>
-  food.foodNutrients.some(
-    (nutrient) =>
-      selectedNutrients.includes(nutrient.name) && nutrient.amount > 0,
-  );
-
 export default function TableScreen() {
   const [expandedRows, setExpandedRows] = useState<ExpandedState>({});
   const [selectedNutrients, setSelectedNutrients] = useState<string[]>(
@@ -408,18 +333,6 @@ export default function TableScreen() {
           );
         },
       },
-      // {
-      //   id: "fdcId",
-      //   header: "ID",
-      //   cell: ({ row }) => (
-      //     <Text style={{ textAlign: "center" }}>
-      //       {row.original.children.length === 0 &&
-      //       row.original.foods.length === 1
-      //         ? row.original.foods[0].fdcId
-      //         : ""}
-      //     </Text>
-      //   ),
-      // },
       {
         id: "description",
         header: "Description",
@@ -432,7 +345,7 @@ export default function TableScreen() {
 
           return (
             <View>
-              <Chip color={DESCRIPTION_CHIP_COLOR}>{label}</Chip>
+              <Text>{label}</Text>
             </View>
           );
         },
@@ -645,15 +558,12 @@ export default function TableScreen() {
                     }}
                   >
                     <Text style={{ fontSize: 16 }}>{nutrientName}</Text>
-                    <Text
-                      style={{
-                        fontSize: 18,
-                        color: vars.colors.surface.secondary,
-                        opacity: isSelected ? 1 : 0,
-                      }}
-                    >
-                      ✓
-                    </Text>
+                    <Ionicons
+                      name="checkmark"
+                      size={16}
+                      color={vars.colors.surface.secondary}
+                      style={{ opacity: isSelected ? 1 : 0 }}
+                    />
                   </Pressable>
                 );
               })}
