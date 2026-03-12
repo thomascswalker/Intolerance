@@ -6,25 +6,25 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 1. Install dependencies
 
-   ```bash
-   npm install
-   ```
+    ```bash
+    npm install
+    ```
 
 2. Start the app
 
-   ```bash
-   npx expo start
-   ```
+    ```bash
+    npx expo start
+    ```
 
 3. Run specific platforms
 
-   ```bash
-   npm run ios
-   npm run web
-   ```
+    ```bash
+    npm run ios
+    npm run web
+    ```
 
-   `ios` targets iPhone/iPad simulator.
-   `web` targets desktop browsers.
+    `ios` targets iPhone/iPad simulator.
+    `web` targets desktop browsers.
 
 In the output, you'll find options to open the app in a
 
