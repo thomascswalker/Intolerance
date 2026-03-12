@@ -1,8 +1,8 @@
 {
-    "editor.codeActionsOnSave": {
-        "source.fixAll.prettier": "always",
-        "source.fixAll": "explicit",
-        "source.organizeImports": "explicit",
-        "source.sortMembers": "explicit"
-    }
+  "editor.codeActionsOnSave": {
+    "source.fixAll.prettier": "always",
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit",
+    "source.sortMembers": "explicit"
+  }
 }

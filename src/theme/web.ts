@@ -1,7 +1,7 @@
 import baseVars from "./base/vars";
 
 const webVars = {
-    ...baseVars,
+  ...baseVars,
 } as const;
 
 export default webVars;
