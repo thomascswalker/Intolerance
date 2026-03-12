@@ -40,7 +40,7 @@ function ColumnFilterView({
         <Pressable
           onPress={() => null}
           style={{
-            backgroundColor: "#FFFFFF",
+            backgroundColor: vars.colors.surface.primary,
             borderRadius: 14,
             maxHeight: "70%",
             overflow: "hidden",

@@ -13,12 +13,15 @@ const baseColors = {
   brown: "#ac7f5e",
   white: "#ffffff",
   black: "#000000",
-  gray: "rgb(142, 142, 147)",
-  gray2: "rgb(174, 174, 178)",
-  gray3: "rgb(199, 199, 204)",
-  gray4: "rgb(209, 209, 214)",
-  gray5: "rgb(229, 229, 234)",
-  gray6: "rgb(242, 242, 247)",
+  gray10: "#f2f2f7",
+  gray20: "#e5e5ea",
+  gray30: "#d1d1d6",
+  gray40: "#c7c7cc",
+  gray50: "#aeaeb2",
+  gray60: "#8e8e93",
+  gray70: "#636366",
+  gray80: "#48484a",
+  gray90: "#1c1c1e",
 } as const;
 
 export default baseColors;

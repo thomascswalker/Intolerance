@@ -14,4 +14,3 @@ export const NUTRIENT_COLOR_MAP: Record<string, string> = {
   Fructose: vars.colors.base.blue,
   Lactose: vars.colors.base.green,
 };
-export const DESCRIPTION_CHIP_COLOR = vars.colors.base.gray;

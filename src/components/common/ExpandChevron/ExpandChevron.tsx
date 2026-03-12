@@ -3,17 +3,13 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Animated, Pressable, View } from "react-native";
 
-interface ExpandChevronProps {
+interface Props {
   canExpand: boolean;
   isExpanded: boolean;
   onPress: () => void;
 }
 
-const ExpandChevron = ({
-  canExpand,
-  isExpanded,
-  onPress,
-}: ExpandChevronProps) => {
+const ExpandChevron = ({ canExpand, isExpanded, onPress }: Props) => {
   const rotation = React.useRef(new Animated.Value(isExpanded ? 1 : 0)).current;
 
   React.useEffect(() => {
