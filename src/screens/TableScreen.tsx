@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   ColumnDef,
@@ -11,9 +10,7 @@ import {
 import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   LayoutAnimation,
-  Modal,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Platform,
@@ -28,33 +25,21 @@ import Reanimated, {
   FadeOutUp,
   LinearTransition,
 } from "react-native-reanimated";
-import Chip from "../components/Chip";
-import Table from "../components/Table";
-import { Food, Nutrient } from "../services/usda/types";
+import Chip from "../components/common/Chip";
+import ExpandChevron from "../components/common/ExpandChevron";
+import Table from "../components/common/Table";
+import ColumnFilterView from "../components/common/Table/ColumnFilterView";
+import { Food } from "../services/usda/types";
 import { fetchUsdaData } from "../services/usda/usda";
+import { hasVisibleNutrient, visibleNutrients } from "../services/usda/utils";
 import vars from "../theme/vars";
-
-const DEFAULT_VISIBLE_NUTRIENTS = ["Energy", "Sucrose", "Fructose", "Lactose"];
-const PAGE_SIZE = 200;
-const EXPANDER_COLUMN_WIDTH = 44;
-const NUTRIENT_COLOR_MAP: Record<string, string> = {
-  Energy: vars.colors.base.red,
-  Sucrose: vars.colors.base.orange,
-  Fructose: vars.colors.base.blue,
-  Lactose: vars.colors.base.green,
-};
-
-const DESCRIPTION_CHIP_COLOR = vars.colors.base.gray;
-
-const toHexChannel = (value: number) =>
-  Math.max(0, Math.min(255, value)).toString(16).padStart(2, "0");
-
-const getDepthRowColor = (depth: number) => {
-  const brightnessFactor = Math.max(0, 1 - depth * 0.1);
-  const channelValue = Math.round(255 * brightnessFactor);
-  const channel = toHexChannel(channelValue);
-  return `#${channel}${channel}${channel}`;
-};
+import { getDepthRowColor } from "../utils/color";
+import {
+  DEFAULT_VISIBLE_NUTRIENTS,
+  EXPANDER_COLUMN_WIDTH,
+  NUTRIENT_COLOR_MAP,
+  PAGE_SIZE,
+} from "./constants";
 
 interface DescriptionNode {
   id: string;
@@ -64,53 +49,6 @@ interface DescriptionNode {
   children: DescriptionNode[];
   foods: Food[];
 }
-
-interface ExpandChevronProps {
-  canExpand: boolean;
-  isExpanded: boolean;
-  onPress: () => void;
-}
-
-const ExpandChevron = ({
-  canExpand,
-  isExpanded,
-  onPress,
-}: ExpandChevronProps) => {
-  const rotation = React.useRef(new Animated.Value(isExpanded ? 1 : 0)).current;
-
-  React.useEffect(() => {
-    Animated.timing(rotation, {
-      toValue: isExpanded ? 1 : 0,
-      duration: 180,
-      useNativeDriver: true,
-    }).start();
-  }, [isExpanded, rotation]);
-
-  const rotate = rotation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "90deg"],
-  });
-
-  if (!canExpand) {
-    return <View style={{ minWidth: 24 }} />;
-  }
-
-  return (
-    <Pressable
-      onPressIn={onPress}
-      unstable_pressDelay={0}
-      style={{ minWidth: 24, alignItems: "center" }}
-    >
-      <Animated.View style={{ transform: [{ rotate }] }}>
-        <Ionicons
-          name="chevron-forward"
-          size={16}
-          color={vars.colors.surface.secondary}
-        />
-      </Animated.View>
-    </Pressable>
-  );
-};
 
 const normalizeLabel = (label: string) => label.trim().toLowerCase();
 
@@ -255,20 +193,6 @@ const sortTreeNodes = (nodes: DescriptionNode[]) => {
   return nodes;
 };
 
-const visibleNutrients = (nutrients: Nutrient[], selectedNutrients: string[]) =>
-  nutrients
-    .filter(
-      (nutrient) =>
-        selectedNutrients.includes(nutrient.name) && nutrient.amount > 0,
-    )
-    .sort((n1, n2) => n1.name.localeCompare(n2.name));
-
-const hasVisibleNutrient = (food: Food, selectedNutrients: string[]) =>
-  food.foodNutrients.some(
-    (nutrient) =>
-      selectedNutrients.includes(nutrient.name) && nutrient.amount > 0,
-  );
-
 export default function TableScreen() {
   const [expandedRows, setExpandedRows] = useState<ExpandedState>({});
   const [selectedNutrients, setSelectedNutrients] = useState<string[]>(
@@ -408,18 +332,6 @@ export default function TableScreen() {
           );
         },
       },
-      // {
-      //   id: "fdcId",
-      //   header: "ID",
-      //   cell: ({ row }) => (
-      //     <Text style={{ textAlign: "center" }}>
-      //       {row.original.children.length === 0 &&
-      //       row.original.foods.length === 1
-      //         ? row.original.foods[0].fdcId
-      //         : ""}
-      //     </Text>
-      //   ),
-      // },
       {
         id: "description",
         header: "Description",
@@ -432,7 +344,7 @@ export default function TableScreen() {
 
           return (
             <View>
-              <Chip color={DESCRIPTION_CHIP_COLOR}>{label}</Chip>
+              <Text>{label}</Text>
             </View>
           );
         },
@@ -596,103 +508,15 @@ export default function TableScreen() {
           </View>
         </ScrollView>
       </Table>
-
-      <Modal
-        transparent
-        visible={isNutrientFilterOpen}
-        animationType="fade"
-        onRequestClose={() => setIsNutrientFilterOpen(false)}
-      >
-        <Pressable
-          onPress={() => setIsNutrientFilterOpen(false)}
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(0,0,0,0.2)",
-            justifyContent: "center",
-            padding: 24,
-          }}
-        >
-          <Pressable
-            onPress={() => null}
-            style={{
-              backgroundColor: "#FFFFFF",
-              borderRadius: 14,
-              maxHeight: "70%",
-              overflow: "hidden",
-            }}
-          >
-            <View style={{ paddingHorizontal: 16, paddingVertical: 14 }}>
-              <Text style={{ fontSize: 17, fontWeight: "600" }}>
-                Visible Nutrients
-              </Text>
-            </View>
-
-            <ScrollView>
-              {nutrientOptions.map((nutrientName) => {
-                const isSelected = selectedNutrients.includes(nutrientName);
-                return (
-                  <Pressable
-                    key={nutrientName}
-                    onPress={() => toggleNutrientSelection(nutrientName)}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      paddingHorizontal: 16,
-                      paddingVertical: 12,
-                      borderTopWidth: 1,
-                      borderTopColor: vars.colors.border.primary,
-                    }}
-                  >
-                    <Text style={{ fontSize: 16 }}>{nutrientName}</Text>
-                    <Text
-                      style={{
-                        fontSize: 18,
-                        color: vars.colors.surface.secondary,
-                        opacity: isSelected ? 1 : 0,
-                      }}
-                    >
-                      ✓
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                padding: 12,
-                borderTopWidth: 1,
-                borderTopColor: vars.colors.border.primary,
-              }}
-            >
-              <Pressable
-                onPress={() => setSelectedNutrients(DEFAULT_VISIBLE_NUTRIENTS)}
-                style={{ padding: 8 }}
-              >
-                <Text style={{ color: vars.colors.surface.secondary }}>
-                  Reset
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setIsNutrientFilterOpen(false)}
-                style={{ padding: 8 }}
-              >
-                <Text
-                  style={{
-                    color: vars.colors.surface.secondary,
-                    fontWeight: "600",
-                  }}
-                >
-                  Done
-                </Text>
-              </Pressable>
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <ColumnFilterView
+        isOpen={isNutrientFilterOpen}
+        onClose={setIsNutrientFilterOpen}
+        onReset={setSelectedNutrients}
+        options={nutrientOptions}
+        selectedOptions={selectedNutrients}
+        toggleOption={toggleNutrientSelection}
+        defaultOptions={DEFAULT_VISIBLE_NUTRIENTS}
+      />
     </View>
   );
 }
