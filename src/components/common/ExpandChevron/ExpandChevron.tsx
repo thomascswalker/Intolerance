@@ -20,7 +20,7 @@ const ExpandChevron = ({
     Animated.timing(rotation, {
       toValue: isExpanded ? 1 : 0,
       duration: 180,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start();
   }, [isExpanded, rotation]);
 

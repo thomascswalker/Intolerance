@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   ColumnDef,
@@ -12,7 +11,6 @@ import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   LayoutAnimation,
-  Modal,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Platform,
@@ -27,9 +25,10 @@ import Reanimated, {
   FadeOutUp,
   LinearTransition,
 } from "react-native-reanimated";
-import Chip from "../components/Chip";
-import ExpandChevron from "../components/ExpandChevron";
-import Table from "../components/Table";
+import Chip from "../components/common/Chip";
+import ExpandChevron from "../components/common/ExpandChevron";
+import Table from "../components/common/Table";
+import ColumnFilterView from "../components/common/Table/ColumnFilterView";
 import { Food } from "../services/usda/types";
 import { fetchUsdaData } from "../services/usda/usda";
 import { hasVisibleNutrient, visibleNutrients } from "../services/usda/utils";
@@ -509,100 +508,15 @@ export default function TableScreen() {
           </View>
         </ScrollView>
       </Table>
-
-      <Modal
-        transparent
-        visible={isNutrientFilterOpen}
-        animationType="fade"
-        onRequestClose={() => setIsNutrientFilterOpen(false)}
-      >
-        <Pressable
-          onPress={() => setIsNutrientFilterOpen(false)}
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(0,0,0,0.2)",
-            justifyContent: "center",
-            padding: 24,
-          }}
-        >
-          <Pressable
-            onPress={() => null}
-            style={{
-              backgroundColor: "#FFFFFF",
-              borderRadius: 14,
-              maxHeight: "70%",
-              overflow: "hidden",
-            }}
-          >
-            <View style={{ paddingHorizontal: 16, paddingVertical: 14 }}>
-              <Text style={{ fontSize: 17, fontWeight: "600" }}>
-                Visible Nutrients
-              </Text>
-            </View>
-
-            <ScrollView>
-              {nutrientOptions.map((nutrientName) => {
-                const isSelected = selectedNutrients.includes(nutrientName);
-                return (
-                  <Pressable
-                    key={nutrientName}
-                    onPress={() => toggleNutrientSelection(nutrientName)}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      paddingHorizontal: 16,
-                      paddingVertical: 12,
-                      borderTopWidth: 1,
-                      borderTopColor: vars.colors.border.primary,
-                    }}
-                  >
-                    <Text style={{ fontSize: 16 }}>{nutrientName}</Text>
-                    <Ionicons
-                      name="checkmark"
-                      size={16}
-                      color={vars.colors.surface.secondary}
-                      style={{ opacity: isSelected ? 1 : 0 }}
-                    />
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                padding: 12,
-                borderTopWidth: 1,
-                borderTopColor: vars.colors.border.primary,
-              }}
-            >
-              <Pressable
-                onPress={() => setSelectedNutrients(DEFAULT_VISIBLE_NUTRIENTS)}
-                style={{ padding: 8 }}
-              >
-                <Text style={{ color: vars.colors.surface.secondary }}>
-                  Reset
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setIsNutrientFilterOpen(false)}
-                style={{ padding: 8 }}
-              >
-                <Text
-                  style={{
-                    color: vars.colors.surface.secondary,
-                    fontWeight: "600",
-                  }}
-                >
-                  Done
-                </Text>
-              </Pressable>
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <ColumnFilterView
+        isOpen={isNutrientFilterOpen}
+        onClose={setIsNutrientFilterOpen}
+        onReset={setSelectedNutrients}
+        options={nutrientOptions}
+        selectedOptions={selectedNutrients}
+        toggleOption={toggleNutrientSelection}
+        defaultOptions={DEFAULT_VISIBLE_NUTRIENTS}
+      />
     </View>
   );
 }

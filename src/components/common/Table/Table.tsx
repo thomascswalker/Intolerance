@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
-import vars from "../../theme/vars";
+import vars from "../../../theme/vars";
 
 const styles = StyleSheet.create({
   table: {
